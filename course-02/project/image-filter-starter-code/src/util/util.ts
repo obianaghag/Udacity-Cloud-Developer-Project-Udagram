@@ -1,31 +1,35 @@
 import fs from "fs";
 import Jimp = require("jimp");
+import axios from 'axios'
 
-// filterImageFromURL
-// helper function to download, filter, and save the filtered image locally
-// returns the absolute path to the local image
-// INPUTS
-//    inputURL: string - a publicly accessible url to an image file
-// RETURNS
-//    an absolute path to a filtered image locally saved file
+
 export async function filterImageFromURL(inputURL: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve:Function, reject:Function) => {
     try {
-      const photo = await Jimp.read(inputURL);
-      const outpath =
-        "/tmp/filtered." + Math.floor(Math.random() * 2000) + ".jpg";
-      await photo
-        .resize(256, 256) // resize
-        .quality(60) // set JPEG quality
+
+  
+     const {data: imageBuffer} = await axios({
+        method: 'get',
+        url: inputURL,
+        responseType: 'arraybuffer'
+      })
+      const photo = await Jimp.read(imageBuffer);
+   
+      const outpath = "/tmp/filtered." + Math.floor(Math.random() * 2000) +'.jpg';
+      
+      photo
+        .resize(256, 256) // resize image
+        .quality(60) // set quality
         .greyscale() // set greyscale
-        .write(__dirname + outpath, (img) => {
+        .write(__dirname + outpath, (err: Error) => {
           resolve(__dirname + outpath);
         });
     } catch (error) {
       reject(error);
     }
   });
-}
+}   
+ 
 
 // deleteLocalFiles
 // helper function to delete files on the local disk
@@ -37,3 +41,4 @@ export async function deleteLocalFiles(files: Array<string>) {
     fs.unlinkSync(file);
   }
 }
+
